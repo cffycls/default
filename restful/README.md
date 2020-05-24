@@ -1,36 +1,88 @@
-# Introduction
+restful-api格式的用户表查询，带身份验证
+	
+##### 1、项目初始化
+```
+composer create-project hyperf/hyperf-skelton restful
+cd restful 
+composer require hyperf/hyperf-devtool
+```
+##### 2、创建用户表
+```
+php bin/hyperf.php gen:migration create_users_table 
+#填写 migrations/table.class 内容
+php bin/hyperf.php migrate 
+php bin/hyperf.php migrate:status
+# 添加索引填写 migrations/xx_update_users_table.class 内容
+php bin/hyperf.php migrate 
+php bin/hyperf.php migrate:status
+```
+>[可用的字段定义方法](https://hyperf.wiki/#/zh-cn/db/migration?id=可用的字段定义方法)
+composer require doctrine/dbal //根据报错，添加修改字段属性依赖
+php bin/hyperf.php migrate:fresh 
+php bin/hyperf.php migrate:rollback=1
+php bin/hyperf.php migrate:status
 
-This is a skeleton application using the Hyperf framework. This application is meant to be used as a starting place for those looking to get their feet wet with Hyperf Framework.
+###### bug: PHP Fatal error:  Uncaught Doctrine\DBAL\DBALException: Unknown database type enum requested, Doctrine\DBAL\Platforms\MySQL80Platform may not support it.
+```
+#### migrations/xx_update_users_table.php
+    function up(){
+	    Schema::getConnection()->getDoctrineSchemaManager()->getDatabasePlatform()->registerDoctrineTypeMapping('enum', 'string');
+    }
+```
+ 
+##### 3、创建控制器
+```
+# a.index/create/update/delete/select 注解路由，设置请求方法
+php bin/hyperf.php gin:controller v1/Users #:文件路径 app/v1/Users.php
+php bin/hyperf.php vendor:publish hyperf/db
+#如果删除报错，执行 rm -rf runtime/*
+./vendor/bin/init-proxy.sh
+# 下载配置文件 php bin/hyperf.php vendor:publish hyperf/xx
 
-# Requirements
+# b.登录鉴权中间件
+php bin/hyperf.php gen:middleware v1/Oauth
+composer require hyperf/session #Oauth.php: process校验
+    if ($this->session->has('id') && $this->session->get('token')){
+        return $handler->handle($request);
+    }
+php bin/hyperf.php gen:controller v1/Login #login方法
+    $this->session->clear();
 
-Hyperf has some requirements for the system environment, it can only run under Linux and Mac environment, but due to the development of Docker virtualization technology, Docker for Windows can also be used as the running environment under Windows.
+    $this->session->set('id', mt_rand(1,999));
+    $this->session->set('token', strtolower(md5($request->server('request_time'))));
+    return $response->json(['status'=>0, 'message'=>'Hello login in!']);
+    
+# c.db:seed数据生成器
+php bin/hyperf.php gen:seeder users #填写 seeders/users.php: run
+php bin/hyperf.php db:seed
+```
+##### 4、配置路由
+```
+Router::addGroup('/v1', function (){
+    Router::post('/login', 'App\Controller\v1\Login@login');
+    Router::addGroup('/users', function (){
+        Router::get('[/]', 'App\Controller\v1\Users@all');
+        Router::get('/{id}', 'App\Controller\v1\Users@get');
+        Router::post('[/]', 'App\Controller\v1\Users@create');
+        Router::put('[/]', 'App\Controller\v1\Users@update');
+        Router::delete('[/]', 'App\Controller\v1\Users@delete');
 
-The various versions of Dockerfile have been prepared for you in the [hyperf\hyperf-docker](https://github.com/hyperf/hyperf-docker) project, or directly based on the already built [hyperf\hyperf](https://hub.docker.com/r/hyperf/hyperf) Image to run.
+    }, ['middleware' => [\App\Middleware\v1\Oauth::class]]);
+});
 
-When you don't want to use Docker as the basis for your running environment, you need to make sure that your operating environment meets the following requirements:  
-
- - PHP >= 7.2
- - Swoole PHP extension >= 4.4，and Disabled `Short Name`
- - OpenSSL PHP extension
- - JSON PHP extension
- - PDO PHP extension （If you need to use MySQL Client）
- - Redis PHP extension （If you need to use Redis Client）
- - Protobuf PHP extension （If you need to use gRPC Server of Client）
-
-# Installation using Composer
-
-The easiest way to create a new Hyperf project is to use Composer. If you don't have it already installed, then please install as per the documentation.
-
-To create your new Hyperf project:
-
-$ composer create-project hyperf/hyperf-skeleton path/to/install
-
-Once installed, you can run the server immediately using the command below.
-
-$ cd path/to/install
-$ php bin/hyperf.php start
-
-This will start the cli-server on port `9501`, and bind it to all network interfaces. You can then visit the site at `http://localhost:9501/`
-
-which will bring up Hyperf default home page.
+### 修改404页面
+class CoreMiddleware extends \Hyperf\HttpServer\CoreMiddleware
+{
+    //Hyperf\HttpServer\CoreMiddleware::class => App\Middleware\CoreMiddleware::class,    #dependencies.php覆盖原方法
+    protected function handleNotFound(ServerRequestInterface $request)
+    {
+        // 重写路由找不到的处理逻辑
+        return $this->response()->withStatus(404)->withBody(new SwooleStream('page not found...'));
+    }
+    protected function handleMethodNotAllowed(array $methods, ServerRequestInterface $request)
+    {
+        // 重写 HTTP 方法不允许的处理逻辑
+        return $this->response()->withStatus(405)->withBody(new SwooleStream('operate not found...'));
+    }
+}
+```
