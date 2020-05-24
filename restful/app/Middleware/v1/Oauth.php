@@ -39,7 +39,7 @@ class Oauth implements MiddlewareInterface
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         echo $request->getRequestTarget() .PHP_EOL;
-        if ($request->getRequestTarget() == '/v1/users/login' || $this->session->has('id') && $this->session->get('token')){
+        if ($this->session->has('id') && $this->session->get('token')){
             echo 'passed' .PHP_EOL;
             return $handler->handle($request);
         }
