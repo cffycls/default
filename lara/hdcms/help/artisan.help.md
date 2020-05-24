@@ -1,0 +1,29 @@
+Description:
+  Lists commands
+
+Usage:
+  list [options] [--] [<namespace>]
+
+Arguments:
+  namespace            The namespace name
+
+Options:
+      --raw            To output raw command list
+      --format=FORMAT  The output format (txt, xml, json, or md) [default: "txt"]
+
+Help:
+  The list command lists all commands:
+  
+    php artisan list
+  
+  You can also display the commands for a specific namespace:
+  
+    php artisan list test
+  
+  You can also output the information in other formats by using the --format option:
+  
+    php artisan list --format=xml
+  
+  It's also possible to get raw list of commands (useful for embedding command runner):
+  
+    php artisan list --raw

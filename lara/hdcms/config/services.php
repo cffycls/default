@@ -30,4 +30,10 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    /*下面是添加的github授权*/
+    'github' => [
+        'client_id' => 'd14750f29d20cc6d6029',
+        'client_secret' => '560ce1824ddeaf48ed3e450b42fc23f1470d1299',
+        'redirect' => 'http://hdcms.test/oauth/github/callback',
+    ],
 ];

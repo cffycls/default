@@ -175,6 +175,9 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
 
+        //社会化登录
+        Overtrue\LaravelSocialite\ServiceProvider::class,
+
     ],
 
     /*
@@ -227,6 +230,8 @@ return [
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
 
+        //socialite登录
+        'Socialite' => Overtrue\LaravelSocialite\Socialite::class,
     ],
 
 ];
