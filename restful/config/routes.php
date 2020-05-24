@@ -17,11 +17,11 @@ Router::addRoute(['GET', 'POST', 'HEAD'], '/', 'App\Controller\IndexController@i
 Router::addGroup('/v1', function (){
     Router::post('/login', 'App\Controller\v1\Login@login');
     Router::addGroup('/users', function (){
-        Router::get('', 'App\Controller\v1\Users@all');
+        Router::get('[/]', 'App\Controller\v1\Users@all');
         Router::get('/{id}', 'App\Controller\v1\Users@get');
-        Router::post('', 'App\Controller\v1\Users@create');
-        Router::put('', 'App\Controller\v1\Users@update');
-        Router::delete('', 'App\Controller\v1\Users@delete');
+        Router::post('[/]', 'App\Controller\v1\Users@create');
+        Router::put('[/]', 'App\Controller\v1\Users@update');
+        Router::delete('[/]', 'App\Controller\v1\Users@delete');
 
     }, ['middleware' => [\App\Middleware\v1\Oauth::class]]);
 

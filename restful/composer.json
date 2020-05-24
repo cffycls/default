@@ -29,8 +29,8 @@
         "doctrine/dbal": "^2.10",
         "hyperf/constants": "^1.1",
         "hyperf/session": "^1.1",
-        "ext-json": "*",
         "hyperf/db": "^1.1",
+        "ext-json": "*",
         "ext-pdo": "*"
     },
     "require-dev": {
